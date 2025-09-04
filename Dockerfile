@@ -30,9 +30,9 @@ USER nestjs
 # Expose port (Railway will set PORT env var)
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node healthcheck.js
+# Health check - give more time for startup
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD node healthcheck.js || exit 1
 
 # Start the application
 CMD ["node", "dist/main.js"]
