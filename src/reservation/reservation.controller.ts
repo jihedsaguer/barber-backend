@@ -57,7 +57,7 @@ export class ReservationController {
       this.logger.warn('No user found in request. JWT may be missing or invalid.');
       throw new Error('Unauthorized: No user found');
     }
-
+    
     // Check for booking availability flags
     const forBooking = query.forBooking === 'true' || query.includeAll === 'true' || query.allUsers === 'true';
 

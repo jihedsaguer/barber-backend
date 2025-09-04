@@ -1,18 +1,30 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import * as dotenv from 'dotenv';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TestDatabaseService } from './test-database.service';
-
-dotenv.config(); // Load .env
-
-const mongoUri = process.env.MONGO_URI;
-if (!mongoUri) {
-  throw new Error('MONGO_URI is not defined in .env file');
-}
 
 @Module({
   imports: [
-    MongooseModule.forRoot(mongoUri),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const uri = configService.get<string>('MONGODB_URI') || configService.get<string>('MONGO_URI');
+        
+        if (!uri) {
+          throw new Error('MONGODB_URI or MONGO_URI must be defined in environment variables');
+        }
+
+        return {
+          uri,
+          retryWrites: true,
+          w: 'majority',
+          maxPoolSize: 10,
+          serverSelectionTimeoutMS: 5000,
+          socketTimeoutMS: 45000,
+        };
+      },
+      inject: [ConfigService],
+    }),
   ],
   providers: [TestDatabaseService],
   exports: [MongooseModule],
