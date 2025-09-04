@@ -4,18 +4,11 @@ FROM node:22-alpine
 # Set working directory
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
-
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nestjs -u 1001
-
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with clean cache
-RUN npm ci --only=production && npm cache clean --force
+# Install ALL dependencies (including dev dependencies for building)
+RUN npm ci && npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -23,11 +16,15 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Remove dev dependencies and clean up
+# Remove dev dependencies and clean up for production
 RUN npm prune --production && npm cache clean --force
 
-# Change ownership to non-root user
-RUN chown -R nestjs:nodejs /app
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nestjs -u 1001 && \
+    chown -R nestjs:nodejs /app
+
+# Switch to non-root user
 USER nestjs
 
 # Expose port (Railway will set PORT env var)
@@ -37,8 +34,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node healthcheck.js
 
-# Use dumb-init to handle signals properly
-ENTRYPOINT ["dumb-init", "--"]
-
 # Start the application
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "dist/main.js"]
