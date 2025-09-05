@@ -53,5 +53,11 @@ async function bootstrap() {
 
 bootstrap().catch((error) => {
   console.error('❌ Error starting the application:', error);
+  console.error('Stack trace:', error.stack);
+  console.error('Environment variables check:');
+  console.error('- PORT:', process.env.PORT);
+  console.error('- NODE_ENV:', process.env.NODE_ENV);
+  console.error('- MONGODB_URI exists:', !!process.env.MONGODB_URI);
+  console.error('- MONGO_URI exists:', !!process.env.MONGO_URI);
   process.exit(1);
 });
