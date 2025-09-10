@@ -28,7 +28,7 @@ async function bootstrap() {
 
     // Explicitly set allowed origins
     const allowedOrigins = [
-      'https://razor-spark-book-git-prod-jihedxais-projects.vercel.app',
+      'https://razor-spark-book.vercel.app',
       'http://localhost:3000',
       'http://localhost:8080',
     ];
