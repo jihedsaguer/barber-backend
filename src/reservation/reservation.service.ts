@@ -8,7 +8,7 @@ import { Service, ServiceDocument } from '../service/schema/service.schema';
 @Injectable()
 export class ReservationService {
   private readonly logger = new Logger(ReservationService.name);
-  private readonly BARBERS = ['Adhib', 'Mike', 'Alex'];
+  private readonly BARBERS = ['Adib'];
 
   constructor(
     @InjectModel(Reservation.name) private readonly reservationModel: Model<ReservationDocument>,
