@@ -5,6 +5,7 @@ import { ReservationService } from './reservation.service';
 import { Reservation, ReservationSchema } from './schema/reservation.schema';
 import { Service, ServiceSchema } from '../service/schema/service.schema';
 import { AuthModule } from '../auth/auth.module'; // Import AuthModule
+import { NotificationsModule } from '../notifications/notifications.module'; // Import NotificationsModule
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { AuthModule } from '../auth/auth.module'; // Import AuthModule
       { name: Service.name, schema: ServiceSchema }
     ]),
     AuthModule, // This provides the JWT strategy and PassportModule
+    NotificationsModule, // This provides push notification services
   ],
   controllers: [ReservationController],
   providers: [ReservationService],

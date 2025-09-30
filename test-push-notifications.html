@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Push Notifications API Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .response {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Push Notifications API Tester</h1>
+        <p>Test your push notification endpoints before implementing in React.</p>
+
+        <!-- Login Section -->
+        <div class="test-section">
+            <h3>1️⃣ Admin Login</h3>
+            <input type="text" id="adminPhone" placeholder="Admin Phone" value="1234567890">
+            <input type="password" id="adminPassword" placeholder="Admin Password" value="password123">
+            <button onclick="loginAdmin()">Login as Admin</button>
+            <div id="loginStatus"></div>
+            <div id="loginResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- VAPID Key Section -->
+        <div class="test-section">
+            <h3>2️⃣ Get VAPID Public Key</h3>
+            <button onclick="getVapidKey()" id="vapidBtn" disabled>Get VAPID Key</button>
+            <div id="vapidStatus"></div>
+            <div id="vapidResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Subscribe Section -->
+        <div class="test-section">
+            <h3>3️⃣ Subscribe to Notifications</h3>
+            <input type="text" id="deviceName" placeholder="Device Name" value="Test Browser">
+            <button onclick="subscribeToNotifications()" id="subscribeBtn" disabled>Subscribe</button>
+            <div id="subscribeStatus"></div>
+            <div id="subscribeResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Get Subscriptions Section -->
+        <div class="test-section">
+            <h3>4️⃣ Get My Subscriptions</h3>
+            <button onclick="getSubscriptions()" id="getSubsBtn" disabled>Get Subscriptions</button>
+            <div id="getSubsStatus"></div>
+            <div id="getSubsResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Test Notification Section -->
+        <div class="test-section">
+            <h3>5️⃣ Send Test Notification</h3>
+            <input type="text" id="notifTitle" placeholder="Notification Title" value="🧪 Test Notification">
+            <input type="text" id="notifBody" placeholder="Notification Body" value="This is a test from the browser">
+            <button onclick="sendTestNotification()" id="testNotifBtn" disabled>Send Test Notification</button>
+            <div id="testNotifStatus"></div>
+            <div id="testNotifResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="test-section">
+            <h3>📋 Instructions</h3>
+            <ol>
+                <li>Make sure your backend is running: <code>npm run start:dev</code></li>
+                <li>Update the admin credentials above</li>
+                <li>Click "Login as Admin" first</li>
+                <li>Then test each endpoint in order</li>
+                <li>Check your browser console and backend logs for details</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:3000';
+        let adminToken = '';
+
+        function showStatus(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.className = `status ${isError ? 'error' : 'success'}`;
+            element.textContent = message;
+        }
+
+        function showResponse(elementId, data) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function loginAdmin() {
+            const phone = document.getElementById('adminPhone').value;
+            const password = document.getElementById('adminPassword').value;
+
+            try {
+                const response = await fetch(`${BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone, password })
+                });
+
+                const data = await response.json();
+                showResponse('loginResponse', data);
+
+                if (response.ok) {
+                    adminToken = data.access_token;
+                    showStatus('loginStatus', `✅ Login successful! User: ${data.user.name} (${data.user.role})`);
+                    
+                    // Enable other buttons
+                    document.getElementById('vapidBtn').disabled = false;
+                    document.getElementById('subscribeBtn').disabled = false;
+                    document.getElementById('getSubsBtn').disabled = false;
+                    document.getElementById('testNotifBtn').disabled = false;
+                } else {
+                    showStatus('loginStatus', `❌ Login failed: ${data.message}`, true);
+                }
+            } catch (error) {
+                showStatus('loginStatus', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        async function getVapidKey() {
+            try {
+                const response = await fetch(`${BASE_URL}/notifications/vapid-public-key`, {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+
+                const data = await response.json();
+                showResponse('vapidResponse', data);
+
+                if (response.ok) {
+                    showStatus('vapidStatus', '✅ VAPID key retrieved successfully');
+                } else {
+                    showStatus('vapidStatus', `❌ Failed: ${data.message}`, true);
+                }
+            } catch (error) {
+                showStatus('vapidStatus', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        async function subscribeToNotifications() {
+            const deviceName = document.getElementById('deviceName').value;
+            const timestamp = Date.now();
+
+            try {
+                const response = await fetch(`${BASE_URL}/notifications/subscribe`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        endpoint: `https://fcm.googleapis.com/fcm/send/test-browser-${timestamp}`,
+                        keys: {
+                            p256dh: `test-p256dh-browser-${timestamp}`,
+                            auth: `test-auth-browser-${timestamp}`
+                        },
+                        deviceName: deviceName
+                    })
+                });
+
+                const data = await response.json();
+                showResponse('subscribeResponse', data);
+
+                if (response.ok) {
+                    showStatus('subscribeStatus', '✅ Successfully subscribed to notifications');
+                } else {
+                    showStatus('subscribeStatus', `❌ Failed: ${data.message}`, true);
+                }
+            } catch (error) {
+                showStatus('subscribeStatus', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        async function getSubscriptions() {
+            try {
+                const response = await fetch(`${BASE_URL}/notifications/subscriptions`, {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+
+                const data = await response.json();
+                showResponse('getSubsResponse', data);
+
+                if (response.ok) {
+                    showStatus('getSubsStatus', `✅ Found ${data.subscriptions.length} subscription(s)`);
+                } else {
+                    showStatus('getSubsStatus', `❌ Failed: ${data.message}`, true);
+                }
+            } catch (error) {
+                showStatus('getSubsStatus', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        async function sendTestNotification() {
+            const title = document.getElementById('notifTitle').value;
+            const body = document.getElementById('notifBody').value;
+
+            try {
+                const response = await fetch(`${BASE_URL}/notifications/test`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        body: body,
+                        data: {
+                            source: 'browser-test',
+                            timestamp: Date.now()
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                showResponse('testNotifResponse', data);
+
+                if (response.ok) {
+                    showStatus('testNotifStatus', `✅ Notification sent! Result: ${data.result.sent} sent, ${data.result.failed} failed`);
+                } else {
+                    showStatus('testNotifStatus', `❌ Failed: ${data.message}`, true);
+                }
+            } catch (error) {
+                showStatus('testNotifStatus', `❌ Error: ${error.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>

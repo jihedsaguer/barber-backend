@@ -9,6 +9,7 @@ import { AvailabilityModule } from './availability/availability.module';
 import { ReservationModule } from './reservation/reservation.module';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { TestDatabaseService } from './database/test-database.service';
 
 @Module({
@@ -25,6 +26,7 @@ import { TestDatabaseService } from './database/test-database.service';
     AvailabilityModule,
     ReservationModule,
     AuthModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService, TestDatabaseService],

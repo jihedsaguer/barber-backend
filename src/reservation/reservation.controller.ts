@@ -91,6 +91,60 @@ export class ReservationController {
     return this.reservationService.updateReservation(id, dto);
   }
 
+  // Accept/Confirm a reservation (Admin only)
+  @Put(':id/accept')
+  @UseGuards(AuthGuard('jwt'))
+  async acceptReservation(@Param('id') id: string, @Request() req): Promise<Reservation> {
+    this.logUser(req);
+    if (!req.user) {
+      this.logger.warn('No user found in request. JWT may be missing or invalid.');
+      throw new Error('Unauthorized: No user found');
+    }
+
+    // Only admins can accept reservations
+    if (req.user.role !== 'admin') {
+      throw new Error('Only admin users can accept reservations');
+    }
+
+    return this.reservationService.updateReservation(id, { status: 'confirmed' });
+  }
+
+  // Cancel a reservation (Admin only)
+  @Put(':id/cancel')
+  @UseGuards(AuthGuard('jwt'))
+  async cancelReservation(@Param('id') id: string, @Request() req): Promise<Reservation> {
+    this.logUser(req);
+    if (!req.user) {
+      this.logger.warn('No user found in request. JWT may be missing or invalid.');
+      throw new Error('Unauthorized: No user found');
+    }
+
+    // Only admins can cancel reservations
+    if (req.user.role !== 'admin') {
+      throw new Error('Only admin users can cancel reservations');
+    }
+
+    return this.reservationService.updateReservation(id, { status: 'cancelled' });
+  }
+
+  // Complete a reservation (Admin only)
+  @Put(':id/complete')
+  @UseGuards(AuthGuard('jwt'))
+  async completeReservation(@Param('id') id: string, @Request() req): Promise<Reservation> {
+    this.logUser(req);
+    if (!req.user) {
+      this.logger.warn('No user found in request. JWT may be missing or invalid.');
+      throw new Error('Unauthorized: No user found');
+    }
+
+    // Only admins can complete reservations
+    if (req.user.role !== 'admin') {
+      throw new Error('Only admin users can complete reservations');
+    }
+
+    return this.reservationService.updateReservation(id, { status: 'completed' });
+  }
+
   // Delete a reservation by id (authenticated)
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))

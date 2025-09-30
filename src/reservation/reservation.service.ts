@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Reservation, ReservationDocument } from './schema/reservation.schema';
 import { CreateReservationDto, UpdateReservationDto } from './dto/reservation.dto';
 import { Service, ServiceDocument } from '../service/schema/service.schema';
+import { PushNotificationService } from '../notifications/push-notification.service';
 
 @Injectable()
 export class ReservationService {
@@ -13,6 +14,7 @@ export class ReservationService {
   constructor(
     @InjectModel(Reservation.name) private readonly reservationModel: Model<ReservationDocument>,
     @InjectModel(Service.name) private readonly serviceModel: Model<ServiceDocument>,
+    private readonly pushNotificationService: PushNotificationService,
   ) {}
 
   // Create a reservation and assign authenticated user as client
@@ -110,7 +112,18 @@ export class ReservationService {
     this.logger.debug('💾 Saving reservation:', JSON.stringify(reservationData));
 
     const reservation = new this.reservationModel(reservationData);
-    return reservation.save();
+    const savedReservation = await reservation.save();
+
+    // 🔔 Send push notification to admins about new reservation
+    try {
+      await this.pushNotificationService.sendNewReservationNotification(savedReservation);
+      this.logger.log('📱 Push notification sent for new reservation');
+    } catch (error) {
+      this.logger.error('❌ Failed to send push notification:', error.message);
+      // Don't fail the reservation creation if notification fails
+    }
+
+    return savedReservation;
   }
 
   // Get reservations (filter by clientId for regular users, or return all for booking availability)
@@ -134,6 +147,14 @@ export class ReservationService {
   async updateReservation(id: string, dto: UpdateReservationDto): Promise<Reservation> {
     this.logger.debug('🔄 Updating reservation:', id);
     
+    // Get the current reservation to compare status
+    const currentReservation = await this.reservationModel.findById(id);
+    if (!currentReservation) {
+      throw new NotFoundException('Reservation not found.');
+    }
+
+    const oldStatus = currentReservation.status;
+    
     const reservation = await this.reservationModel.findByIdAndUpdate(
       id,
       { ...dto, updatedAt: new Date() },
@@ -142,6 +163,17 @@ export class ReservationService {
     
     if (!reservation) {
       throw new NotFoundException('Reservation not found.');
+    }
+
+    // 🔔 Send push notification if status changed
+    if (dto.status && dto.status !== oldStatus) {
+      try {
+        await this.pushNotificationService.sendReservationStatusNotification(reservation, oldStatus);
+        this.logger.log(`📱 Push notification sent for status change: ${oldStatus} → ${dto.status}`);
+      } catch (error) {
+        this.logger.error('❌ Failed to send status change notification:', error.message);
+        // Don't fail the update if notification fails
+      }
     }
     
     this.logger.debug('✅ Reservation updated successfully');
