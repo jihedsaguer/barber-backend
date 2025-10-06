@@ -16,3 +16,9 @@ services:
         generateValue: true
       - key: ALLOWED_ORIGINS
         sync: false  # Set this in Render dashboard
+      - key: VAPID_PUBLIC_KEY
+        sync: false  # Set this in Render dashboard
+      - key: VAPID_PRIVATE_KEY
+        sync: false  # Set this in Render dashboard
+      - key: VAPID_SUBJECT
+        sync: false  # Set this in Render dashboard
