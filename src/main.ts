@@ -28,9 +28,12 @@ async function bootstrap() {
 
     // Explicitly set allowed origins
     const allowedOrigins = [
+      'http://localhost:5173',
+      'http://react-dev:5173',
       'https://razor-spark-book.vercel.app',
       'http://localhost:3000',
       'http://localhost:8080',
+      
     ];
 
     app.enableCors({
