@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout Frontend') {
             steps {
                 dir('frontend') {
-                    git branch: 'master', url: 'https://github.com/jihedsaguer/barber-frontend.git'
+                    git branch: 'prod', url: 'https://github.com/jihedsaguer/barber-frontend.git'
                 }
             }
         }
